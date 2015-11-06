@@ -70,7 +70,7 @@ public class CentralizedTemplate implements CentralizedBehavior {
         int counter = 0;
         do{
             List<List<Action>> oldPlans = new ArrayList<>(plans);
-            List<List<List<Action>>> neighborSolutions = chooseNeighbors(vehicles, tasks);
+            List<List<List<Action>>> neighborSolutions = chooseNeighbors(oldPlans, vehicles, tasks);
             plans = localChoice(neighborSolutions);
             counter++;
         }while(counter < TOTAL_ITERATIONS);
@@ -109,7 +109,7 @@ public class CentralizedTemplate implements CentralizedBehavior {
         return plan;
     }
 
-    List<Plan> listToPlan(List<List<Action>> plans, List<Vehicle> vehicles, TaskSet tasks){
+    private List<Plan> listToPlan(List<List<Action>> plans, List<Vehicle> vehicles, TaskSet tasks){
         List<Plan> finalList = new ArrayList<>();
         int vehicleNb = 0;
         for (List<Action> planList : plans){
@@ -119,15 +119,9 @@ public class CentralizedTemplate implements CentralizedBehavior {
             //create correct Plan
             for (Action action:planList){
                 //Get task Id of action
-                int taskID = getTaskID(action);
-                Task currentTask=null;
+                Task currentTask = getTask(action, tasks);
                 //Get task from ID
-                for (Task temporaryTask :tasks){
-                    if (temporaryTask.id == taskID){
-                        currentTask = temporaryTask;
-                        break;
-                    }
-                }
+
                 //find route to action city
                 if (action.getClass() == Action.Pickup.class) {
                     for (City city : current.pathTo(currentTask.pickupCity)) {
@@ -152,7 +146,7 @@ public class CentralizedTemplate implements CentralizedBehavior {
         return finalList;
     }
 
-    int getTaskID(Action action) {
+    private Task getTask(Action action, TaskSet tasks) {
         String task;
         if (action.getClass() == Action.Pickup.class){
             task = action.toString().substring(13, action.toString().length() - 1);
@@ -160,16 +154,54 @@ public class CentralizedTemplate implements CentralizedBehavior {
             task = action.toString().substring(14, action.toString().length() - 1);
         }
         int taskID = Integer.parseInt(task);
-        return taskID;
+        Task currentTask=null;
+        for (Task temporaryTask :tasks){
+            if (temporaryTask.id == taskID){
+                currentTask = temporaryTask;
+                break;
+            }
+        }
+        return currentTask;
     }
 
-    List<List<List<Action>>> chooseNeighbors(List<Vehicle> vehicles, TaskSet tasks) {
+    private List<List<List<Action>>> chooseNeighbors(List<List<Action>> oldPlans, List<Vehicle> vehicles, TaskSet tasks) {
         List<List<List<Action>>> neighborSolutions = new ArrayList<>();
+        //Get a random vehicle
+        int index;
+        do {
+            Random random = new Random();
+            index = random.nextInt(10);
+        }while(oldPlans.get(index).isEmpty());
+        Vehicle referenceVehicle = vehicles.get(index);
+        //Changing vehicle operator
+        for (Vehicle vehicle : vehicles){
+            if (vehicle != referenceVehicle){
+                Task task = getTask(oldPlans.get(vehicle.id()).get(0), tasks);
+                if (true /*TODO check capacity*/) {
+                    List<List<Action>> newPlan = changeVehicle(vehicle, referenceVehicle, oldPlans);
+                    neighborSolutions.add(newPlan);
+                }
+            }
+        }
+        //Changing task order operator:
         //TODO Implement chooseNeighbors function
+        int length = oldPlans.get(referenceVehicle.id()).size();
+        if (length > 2){
+            //TODO For all couple of tasks, interchange them using changeTaskOrder
+                List<List<Action>> newPlan = null;
+                neighborSolutions.add(newPlan);
+        }
+
         return neighborSolutions;
     }
 
-    List<List<Action>> localChoice(List<List<List<Action>>> neighborSolutions){
+    private List<List<Action>> changeVehicle(Vehicle vehicle, Vehicle referenceVehicle, List<List<Action>> oldPlans)
+    {
+        List<List<Action>> newPlan = new ArrayList<>();
+        //TODO change the first task of referenceVehicle to vehicle
+        return newPlan;
+    }
+    private List<List<Action>> localChoice(List<List<List<Action>>> neighborSolutions){
         List<List<Action>> bestSolutions = new ArrayList<>();
         //TODO Implement localChoice function
         return bestSolutions;
