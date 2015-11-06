@@ -27,6 +27,8 @@ import logist.topology.Topology.City;
 @SuppressWarnings("unused")
 public class CentralizedTemplate implements CentralizedBehavior {
 
+    private final int TOTAL_ITERATIONS = 10000;
+
     private Topology topology;
     private TaskDistribution distribution;
     private Agent agent;
@@ -40,7 +42,7 @@ public class CentralizedTemplate implements CentralizedBehavior {
         // this code is used to get the timeouts
         LogistSettings ls = null;
         try {
-            ls = Parsers.parseSettings("config\\settings_default.xml");
+            ls = Parsers.parseSettings("config//settings_default.xml");
         }
         catch (Exception exc) {
             System.out.println("There was a problem loading the configuration file.");
@@ -58,6 +60,26 @@ public class CentralizedTemplate implements CentralizedBehavior {
 
     @Override
     public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
+        long time_start = System.currentTimeMillis();
+
+        List<Plan> plans = new ArrayList<Plan>();
+        plans = initialPlan(vehicles, tasks);
+        int counter = 0;
+        do{
+            List<Plan> oldPlans = new ArrayList<>(plans);
+            List<List<Plan>> neighborSolutions = chooseNeighbors(vehicles, tasks);
+            plans = localChoice(neighborSolutions);
+            counter++;
+        }while(counter < TOTAL_ITERATIONS);
+
+        long time_end = System.currentTimeMillis();
+        long duration = time_end - time_start;
+        System.out.println("The plan was generated in "+duration+" milliseconds.");
+
+        return plans;
+    }
+
+    private List<Plan> initialPlan(List<Vehicle> vehicles, TaskSet tasks) {
         long time_start = System.currentTimeMillis();
         
 //		System.out.println("Agent " + agent.id() + " has tasks " + tasks);
@@ -99,5 +121,17 @@ public class CentralizedTemplate implements CentralizedBehavior {
             current = task.deliveryCity;
         }
         return plan;
+    }
+
+    List<List<Plan>> chooseNeighbors(List<Vehicle> vehicles, TaskSet tasks) {
+        List<List<Plan>> neighborSolutions = new ArrayList<>();
+        //TODO Implement chooseNeighbors function
+        return neighborSolutions;
+    }
+
+    List<Plan> localChoice(List<List<Plan>> neighborSolutions){
+        List<Plan> bestSolutions = new ArrayList<>();
+        //TODO Implement localChoice function
+        return bestSolutions;
     }
 }
