@@ -7,10 +7,7 @@ import logist.task.Task;
 import logist.task.TaskSet;
 import logist.topology.Topology.City;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Centralized_Agent Created by samsara on 06/11/2015.
@@ -37,15 +34,19 @@ public class CentralizedPlanner
         selectInitialSolution();
     }
 
+    //NEED A COPY CREATOR TO BE CHECKED
+    public CentralizedPlanner(CentralizedPlanner cp)
+    {
+        this.jobList = new ArrayList<LinkedList<Job>>(cp.vehicles.size());     // I thought you wanted to have an array since the nb of vehicles is already known.
+        this.tasks = cp.tasks.clone();
+        this.vehicles = cp.vehicles;
+    }
+
     private Task[] getArray(TaskSet tasks){
         Task[] taskArray = new Task[tasks.size()];
         for (Task task : tasks){
             taskArray[task.id]=task;
         }
-        for (Task task : taskArray){
-            System.out.println(task.toString());
-        }
-
         return taskArray;
     }
     /**
@@ -136,13 +137,50 @@ public class CentralizedPlanner
     public List<CentralizedPlanner> chooseNeighbours()
     {
         List<CentralizedPlanner> neighbours = new LinkedList<>();
+        //Get a random vehicle
+        int index;
+        do {
+            Random random = new Random();
+            index = random.nextInt(vehicles.size()-1);
+        }while(jobList.get(index).isEmpty());
+
+        Vehicle referenceVehicle = vehicles.get(index);
+        List<Job> referencePlan = jobList.get(index);
+        //Changing vehicle operator
+        for (Vehicle vehicle : vehicles){
+            if (vehicle != referenceVehicle){
+                Task task = tasks[referencePlan.get(0).getT()];
+                if (task.weight<vehicle.capacity()) {
+                    CentralizedPlanner newPlan = changingVehicle(index, vehicle.id());
+                    neighbours.add(newPlan);
+                }
+            }
+        }
+        //Changing task order operator:
+        int length = jobList.get(index).size();
+        if (length > 2){
+            //TODO For all couple of tasks, interchange them using changeTaskOrder
+            CentralizedPlanner newPlan = null;
+            neighbours.add(newPlan);
+        }
+
         return neighbours;
     }
 
     // TODO
-    private void changingVehicle()
+    // NON VOID FUNCTION!! NEED TO RETURN A JOB LIST.
+    private CentralizedPlanner changingVehicle(int referenceIndex, int index)
     {
+        CentralizedPlanner newPlan = new CentralizedPlanner(this);
 
+        List<Job> referencePlan = jobList.get(referenceIndex);
+        Task task = tasks[referencePlan.get(0).getT()];
+        newPlan.removeJob(this.jobList,referenceIndex,task.id);
+
+        LinkedList<Job> vehiclePlan = newPlan.jobList.get(index);
+        vehiclePlan.add(new Job(task.id, PICKUP));
+        vehiclePlan.add(new Job(task.id, DELIVERY));
+        return newPlan;
     }
 
     // TODO

@@ -79,66 +79,13 @@ public class CentralizedTemplate implements CentralizedBehavior {
         long time_end = System.currentTimeMillis();
         long duration = time_end - time_start;
         System.out.println("The plan was generated in "+duration+" milliseconds.");
+        List<Plan> finalPlans = bestPlan.getPlan(0);
+        System.out.println(finalPlans.toString());
 
-        return bestPlan.getPlan(0);
+        return finalPlans;
     }
 
-    private List<Plan> listToPlan(List<List<Action>> plans, List<Vehicle> vehicles, TaskSet tasks){
-        List<Plan> finalList = new ArrayList<>();
-        int vehicleNb = 0;
-        for (List<Action> planList : plans){
-            //Initialize plan
-            City current = vehicles.get(vehicleNb).getCurrentCity();
-            Plan completePlan = new Plan(current);
-            //create correct Plan
-            for (Action action:planList){
-                //Get task Id of action
-                Task currentTask = getTask(action, tasks);
-                //Get task from ID
-
-                //find route to action city
-                if (action.getClass() == Action.Pickup.class) {
-                    for (City city : current.pathTo(currentTask.pickupCity)) {
-                        completePlan.appendMove(city);
-                    }
-                    completePlan.appendPickup(currentTask);
-                    current = currentTask.pickupCity;
-                } else {
-                    for (City city : current.pathTo(currentTask.deliveryCity)) {
-                        completePlan.appendMove(city);
-                    }
-                    completePlan.appendDelivery(currentTask);
-                    current = currentTask.deliveryCity;
-                }
-            }
-            finalList.add(completePlan);
-            vehicleNb++;
-        }
-        while (finalList.size() < vehicles.size()) {
-            finalList.add(Plan.EMPTY);
-        }
-        return finalList;
-    }
-
-    private Task getTask(Action action, TaskSet tasks) {
-        String task;
-        if (action.getClass() == Action.Pickup.class){
-            task = action.toString().substring(13, action.toString().length() - 1);
-        } else {
-            task = action.toString().substring(14, action.toString().length() - 1);
-        }
-        int taskID = Integer.parseInt(task);
-        Task currentTask=null;
-        for (Task temporaryTask :tasks){
-            if (temporaryTask.id == taskID){
-                currentTask = temporaryTask;
-                break;
-            }
-        }
-        return currentTask;
-    }
-
-    private List<List<List<Action>>> chooseNeighbors(List<List<Action>> oldPlans, List<Vehicle> vehicles, TaskSet tasks) {
+    /*private List<List<List<Action>>> chooseNeighbors(List<List<Action>> oldPlans, List<Vehicle> vehicles, TaskSet tasks) {
         List<List<List<Action>>> neighborSolutions = new ArrayList<>();
         //Get a random vehicle
         int index;
@@ -183,7 +130,8 @@ public class CentralizedTemplate implements CentralizedBehavior {
         vehiclePlan.add(new Action.Pickup(task));
         vehiclePlan.add(new Action.Delivery(task));
         return newPlan;
-    }
+    }*/
+
     private CentralizedPlanner localChoice(List<CentralizedPlanner> neighborSolutions, CentralizedPlanner oldPlans) {
         CentralizedPlanner bestSolutions = null;
         //TODO Implement localChoice function
