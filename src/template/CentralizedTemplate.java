@@ -70,16 +70,16 @@ public class CentralizedTemplate implements CentralizedBehavior {
         CentralizedPlanner plans = new CentralizedPlanner(vehicles, tasks);
         CentralizedPlanner bestPlan = plans;
         int counter = 0;
-        /*do{
-            List<CentralizedPlanner> neighbourSolutions = plans.chooseNeighbours();
-            bestPlan = localChoice(neighbourSolutions, plans);
+        do{
+            plans.chooseNeighbours();
+            plans.localChoice();
             counter++;
-        }while(counter < TOTAL_ITERATIONS);*/
+        }while(counter < TOTAL_ITERATIONS);
 
         long time_end = System.currentTimeMillis();
         long duration = time_end - time_start;
         System.out.println("The plan was generated in "+duration+" milliseconds.");
-        List<Plan> finalPlans = bestPlan.getPlan();
+        List<Plan> finalPlans = plans.getPlan();
         System.out.println(finalPlans.toString());
 
         return finalPlans;
