@@ -7,6 +7,7 @@ import logist.task.Task;
 import logist.task.TaskSet;
 import logist.topology.Topology.City;
 
+import java.lang.reflect.Array;
 import java.util.*;
 
 /**
@@ -25,21 +26,16 @@ public class CentralizedPlanner
     // V1 Job(Task, Action), ...
     // V2 ...
 
+    private Set<ArrayList<LinkedList<Job>>> neighbours;
+
     public CentralizedPlanner(List<Vehicle> vehicles, TaskSet tasks)
     {
-        this.jobList = new ArrayList<LinkedList<Job>>(vehicles.size());     // I thought you wanted to have an array since the nb of vehicles is already known.
+        this.jobList = new ArrayList<>(vehicles.size());
         CentralizedPlanner.tasks = getArray(tasks);
         CentralizedPlanner.vehicles = vehicles;
+        this.neighbours = new HashSet<>();
 
         selectInitialSolution();
-    }
-
-    //NEED A COPY CREATOR TO BE CHECKED
-    public CentralizedPlanner(CentralizedPlanner cp)
-    {
-        this.jobList = new ArrayList<LinkedList<Job>>(cp.vehicles.size());     // I thought you wanted to have an array since the nb of vehicles is already known.
-        this.tasks = cp.tasks.clone();
-        this.vehicles = cp.vehicles;
     }
 
     private Task[] getArray(TaskSet tasks){
@@ -123,20 +119,11 @@ public class CentralizedPlanner
                 throw new IllegalArgumentException("Task do not fit any vehicle");
             }
         }
-        for (Vehicle vehicle: vehicles){
-            if (vehicle.id() == vehicleId) {
-                jobList.add(jobs);
-            } else {
-                jobList.add(null);
-            }
-        }
+        jobList.add(vehicleId,jobs);
     }
 
-    // TODO
-    // THIS IS NOT A VOID FUNCTION! RETURN A LIST OF CentralizedPlanner
-    public List<CentralizedPlanner> chooseNeighbours()
+    public void chooseNeighbours()
     {
-        List<CentralizedPlanner> neighbours = new LinkedList<>();
         //Get a random vehicle
         int index;
         do {
@@ -151,8 +138,7 @@ public class CentralizedPlanner
             if (vehicle != referenceVehicle){
                 Task task = tasks[referencePlan.get(0).getT()];
                 if (task.weight<vehicle.capacity()) {
-                    CentralizedPlanner newPlan = changingVehicle(index, vehicle.id());
-                    neighbours.add(newPlan);
+                    changingVehicle(index, vehicle.id());
                 }
             }
         }
@@ -160,27 +146,24 @@ public class CentralizedPlanner
         int length = jobList.get(index).size();
         if (length > 2){
             //TODO For all couple of tasks, interchange them using changeTaskOrder
-            CentralizedPlanner newPlan = null;
+            ArrayList<LinkedList<Job>> newPlan = null;
             neighbours.add(newPlan);
         }
-
-        return neighbours;
     }
 
-    // TODO
-    // NON VOID FUNCTION!! NEED TO RETURN A JOB LIST.
-    private CentralizedPlanner changingVehicle(int referenceIndex, int index)
+    // TODO TAKE CARE OF REMOVEJOB METHOD INSIDE!
+    private void changingVehicle(int referenceIndex, int index)
     {
-        CentralizedPlanner newPlan = new CentralizedPlanner(this);
+        ArrayList<LinkedList<Job>> newPlan = new ArrayList<>(jobList);
 
         List<Job> referencePlan = jobList.get(referenceIndex);
         Task task = tasks[referencePlan.get(0).getT()];
-        newPlan.removeJob(this.jobList,referenceIndex,task.id);
+        //removeJob(this.jobList,referenceIndex,task.id);
 
-        LinkedList<Job> vehiclePlan = newPlan.jobList.get(index);
+        LinkedList<Job> vehiclePlan = newPlan.get(index);
         vehiclePlan.add(new Job(task.id, PICKUP));
         vehiclePlan.add(new Job(task.id, DELIVERY));
-        return newPlan;
+        neighbours.add(newPlan);
     }
 
     // TODO
@@ -189,9 +172,7 @@ public class CentralizedPlanner
 
     }
 
-    // TODO get plan for vehicle
-    //Why is the vehicle needed? Don't you want all of them??
-    public List<Plan> getPlan(int vehicle)
+    public List<Plan> getPlan()
     {
         List<Plan> finalList = new ArrayList<>();
         int vehicleID = 0;
@@ -231,7 +212,6 @@ public class CentralizedPlanner
 
 
     // TODO
-    // Function to keep outside of the planner so that we can apply to the list of neighbors created outside!
     public double localChoice()
     {
         return 0;
