@@ -68,7 +68,6 @@ public class CentralizedTemplate implements CentralizedBehavior {
         long time_start = System.currentTimeMillis();
 
         CentralizedPlanner plans = new CentralizedPlanner(vehicles, tasks);
-        CentralizedPlanner bestPlan = plans;
         int counter = 0;
         do{
             plans.chooseNeighbours();

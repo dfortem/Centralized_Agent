@@ -107,7 +107,7 @@ public class CentralizedPlanner
         }
 
         // Add all tasks to one vehicle
-        LinkedList<Job> jobs = new LinkedList<Job>();
+        LinkedList<Job> jobs = new LinkedList<>();
         for (int i = 0; i < tasks.length; i++)
         {
             if (tasks[i].weight < capacity)
@@ -119,46 +119,53 @@ public class CentralizedPlanner
                 throw new IllegalArgumentException("Task do not fit any vehicle");
             }
         }
-        jobList.add(vehicleId,jobs);
+        for (Vehicle vehicle: vehicles){
+            if (vehicle.id() == vehicleId) {
+                jobList.add(jobs);
+            } else {
+                jobList.add(new LinkedList<>());
+            }
+        }
+        System.out.println("Job list size:" + jobList.size());
     }
 
     public void chooseNeighbours()
     {
         //Get a random vehicle
-        int index;
+        int referenceVehicleId;
         do {
             Random random = new Random();
-            index = random.nextInt(vehicles.size()-1);
-        }while(jobList.get(index).isEmpty());
+            referenceVehicleId = random.nextInt(vehicles.size()-1);
+        }while(jobList.get(referenceVehicleId).isEmpty());
 
-        Vehicle referenceVehicle = vehicles.get(index);
-        List<Job> referencePlan = jobList.get(index);
+        Vehicle referenceVehicle = vehicles.get(referenceVehicleId);
+        List<Job> referencePlan = jobList.get(referenceVehicleId);
         //Changing vehicle operator
         for (Vehicle vehicle : vehicles){
             if (vehicle != referenceVehicle){
-                Task task = tasks[referencePlan.get(0).getT()];
+                int newIndex = referencePlan.get(0).getT();
+                Task task = tasks[newIndex];
                 if (task.weight<vehicle.capacity()) {
-                    changingVehicle(index, vehicle.id());
+                    changingVehicle(referenceVehicleId, vehicle.id());
                 }
             }
         }
-        //Changing task order operator:
-        int length = jobList.get(index).size();
+        /*Changing task order operator:
+        int length = jobList.get(referenceVehicleId).size();
         if (length > 2){
             //TODO For all couple of tasks, interchange them using changeTaskOrder
             ArrayList<LinkedList<Job>> newPlan = null;
             neighbours.add(newPlan);
-        }
+        }*/
     }
 
-    // TODO TAKE CARE OF REMOVEJOB METHOD INSIDE!
     private void changingVehicle(int referenceIndex, int index)
     {
-        ArrayList<LinkedList<Job>> newPlan = new ArrayList<>(jobList);
+        ArrayList<LinkedList<Job>> newPlan = deepCopy(jobList);
 
-        List<Job> referencePlan = jobList.get(referenceIndex);
+        List<Job> referencePlan = newPlan.get(referenceIndex);
         Task task = tasks[referencePlan.get(0).getT()];
-        //removeJob(this.jobList,referenceIndex,task.id);
+        removeJob(newPlan,referenceIndex,task.id);
 
         LinkedList<Job> vehiclePlan = newPlan.get(index);
         vehiclePlan.add(new Job(task.id, PICKUP));
@@ -170,6 +177,22 @@ public class CentralizedPlanner
     private void changingTaskOrder()
     {
 
+    }
+
+    private ArrayList<LinkedList<Job>> deepCopy (ArrayList<LinkedList<Job>> initialList ){
+        ArrayList<LinkedList<Job>> newList = new ArrayList<>();
+        for (LinkedList<Job> list : initialList){
+            LinkedList<Job> temp = new LinkedList<>();
+            for (Job job : list){
+                try {
+                    temp.add(job.clone());
+                }catch (CloneNotSupportedException e){
+                    System.out.println(e);
+                }
+            }
+            newList.add(temp);
+        }
+        return newList;
     }
 
     public List<Plan> getPlan()
@@ -212,9 +235,9 @@ public class CentralizedPlanner
 
 
     // TODO
-    public double localChoice()
+    public void localChoice()
     {
-        return 0;
+
     }
 
     private class Job implements Cloneable
@@ -245,9 +268,18 @@ public class CentralizedPlanner
         }
 
         @Override
-        protected Object clone() throws CloneNotSupportedException
+        public String toString(){
+            if (a==PICKUP){
+                return ("PICKUP TASK " + t);
+            } else {
+                return ("DELIVER TASK " + t);
+            }
+        }
+
+        @Override
+        protected Job clone() throws CloneNotSupportedException
         {
-            return super.clone();
+            return (Job) super.clone();
         }
     }
 }
