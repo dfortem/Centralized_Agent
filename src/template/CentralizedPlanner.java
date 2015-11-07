@@ -1,5 +1,6 @@
 package template;
 
+import logist.plan.Action;
 import logist.plan.Plan;
 import logist.simulation.Vehicle;
 import logist.task.Task;
@@ -22,19 +23,31 @@ public class CentralizedPlanner
     private static Task[] tasks;
     private static List<Vehicle> vehicles;
 
-    private ArrayList<LinkedList<Job>> jobList; // V0 Job(Task, Action), Job(Task, Action)
-
+    private ArrayList<LinkedList<Job>> jobList;
+    // V0 Job(Task, Action), Job(Task, Action)
     // V1 Job(Task, Action), ...
     // V2 ...
+
     public CentralizedPlanner(List<Vehicle> vehicles, TaskSet tasks)
     {
-        this.jobList = new ArrayList<LinkedList<Job>>(vehicles.size());
-        CentralizedPlanner.tasks = (Task[]) tasks.toArray();
+        this.jobList = new ArrayList<LinkedList<Job>>(vehicles.size());     // I thought you wanted to have an array since the nb of vehicles is already known.
+        CentralizedPlanner.tasks = getArray(tasks);
         CentralizedPlanner.vehicles = vehicles;
 
         selectInitialSolution();
     }
 
+    private Task[] getArray(TaskSet tasks){
+        Task[] taskArray = new Task[tasks.size()];
+        for (Task task : tasks){
+            taskArray[task.id]=task;
+        }
+        for (Task task : taskArray){
+            System.out.println(task.toString());
+        }
+
+        return taskArray;
+    }
     /**
      * Remove both pickup and delivery of a task from jobList
      *
@@ -88,7 +101,7 @@ public class CentralizedPlanner
         int capacity = 0;
         for (Vehicle v : vehicles)
         {
-            int temp;
+            int temp;                                                          //not necessary, just use v.capacity()
             if ((temp = v.capacity()) > capacity)
             {
                 vehicleId = v.id();
@@ -97,7 +110,7 @@ public class CentralizedPlanner
         }
 
         // Add all tasks to one vehicle
-        LinkedList<Job> jobs = jobList.get(vehicleId);
+        LinkedList<Job> jobs = new LinkedList<Job>();
         for (int i = 0; i < tasks.length; i++)
         {
             if (tasks[i].weight < capacity)
@@ -109,12 +122,21 @@ public class CentralizedPlanner
                 throw new IllegalArgumentException("Task do not fit any vehicle");
             }
         }
+        for (Vehicle vehicle: vehicles){
+            if (vehicle.id() == vehicleId) {
+                jobList.add(jobs);
+            } else {
+                jobList.add(null);
+            }
+        }
     }
 
     // TODO
-    public void chooseNeighbours()
+    // THIS IS NOT A VOID FUNCTION! RETURN A LIST OF CentralizedPlanner
+    public List<CentralizedPlanner> chooseNeighbours()
     {
-
+        List<CentralizedPlanner> neighbours = new LinkedList<>();
+        return neighbours;
     }
 
     // TODO
@@ -130,12 +152,48 @@ public class CentralizedPlanner
     }
 
     // TODO get plan for vehicle
+    //Why is the vehicle needed? Don't you want all of them??
     public List<Plan> getPlan(int vehicle)
     {
-        return null;
+        List<Plan> finalList = new ArrayList<>();
+        int vehicleID = 0;
+        for (LinkedList<Job> plan : jobList){
+            //Initialize plan
+            City current = vehicles.get(vehicleID).getCurrentCity();
+            Plan completePlan = new Plan(current);
+            //create correct Plan
+            if (plan != null) {
+                for (Job action : plan) {
+                    //Get task from action
+                    Task currentTask = tasks[action.getT()];
+                    //find route to action city
+                    if (action.getA() == PICKUP) {
+                        for (City city : current.pathTo(currentTask.pickupCity)) {
+                            completePlan.appendMove(city);
+                        }
+                        completePlan.appendPickup(currentTask);
+                        current = currentTask.pickupCity;
+                    } else {
+                        for (City city : current.pathTo(currentTask.deliveryCity)) {
+                            completePlan.appendMove(city);
+                        }
+                        completePlan.appendDelivery(currentTask);
+                        current = currentTask.deliveryCity;
+                    }
+                }
+            }
+            finalList.add(completePlan);
+            vehicleID++;
+        }
+        while (finalList.size() < vehicles.size()) {
+            finalList.add(Plan.EMPTY);
+        }
+        return finalList;
     }
 
+
     // TODO
+    // Function to keep outside of the planner so that we can apply to the list of neighbors created outside!
     public double localChoice()
     {
         return 0;
