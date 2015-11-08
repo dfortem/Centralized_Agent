@@ -37,13 +37,6 @@ public class CentralizedPlanner
         selectInitialSolution();
     }
 
-    private Task[] getArray(TaskSet tasks){
-        Task[] taskArray = new Task[tasks.size()];
-        for (Task task : tasks){
-            taskArray[task.id]=task;
-        }
-        return taskArray;
-    }
     /**
      * Remove both pickup and delivery of a task from jobList
      *
@@ -53,6 +46,20 @@ public class CentralizedPlanner
     private static void removeJob(ArrayList<LinkedList<Job>> jobList, int vehicle, int task)
     {
         Iterator<Job> iterator = jobList.get(vehicle).listIterator();
+        while (iterator.hasNext())
+        {
+            Job j = iterator.next();
+            if (j.getT() == task)
+            {
+                iterator.remove(); // Remove pickup and delivery
+            }
+        }
+    }
+
+    // More Useful for changing order
+    private static void removeJob(LinkedList<Job> jobList, int task)
+    {
+        Iterator<Job> iterator = jobList.listIterator();
         while (iterator.hasNext())
         {
             Job j = iterator.next();
@@ -84,6 +91,16 @@ public class CentralizedPlanner
             homeCity = taskCity;
         }
         return distance * vehicle.costPerKm();
+    }
+
+    private Task[] getArray(TaskSet tasks)
+    {
+        Task[] taskArray = new Task[tasks.size()];
+        for (Task task : tasks)
+        {
+            taskArray[task.id] = task;
+        }
+        return taskArray;
     }
 
     /**
@@ -172,10 +189,113 @@ public class CentralizedPlanner
     }
 
     // TODO
-    private void changingTaskOrder()
+    private LinkedList<Job> deepCopySingle(LinkedList<Job> jobs)
     {
+        return null;
+    }
+
+    // TODO
+    private void changingTaskOrder(LinkedList<Job> jobs, double capacity)
+    {
+        LinkedList<Job> newPlan;
+        int index = 0;
+
+        for (Job j : jobs)
+        {
+            if (j.getA() == PICKUP)
+            {
+                int task = j.getT();
+                newPlan = deepCopySingle(jobs);
+                removeJob(newPlan, task);
+
+                insertJob(newPlan, task, index, capacity);
+            }
+            index++;
+        }
 
     }
+
+    private void insertJob(LinkedList<Job> plan, int task, int index, double capacity)
+    {
+        int i = 0;
+        double load = 0;
+        double taskWeight = tasks[task].weight;
+
+        for (Job j : plan)
+        {
+            int weight = tasks[j.getT()].weight;
+
+            if (j.getA() == PICKUP)
+            {
+                load += weight; // Pickup
+            } else
+            {
+                load -= weight; // Delivery
+            }
+
+
+            if (i >= index)
+            {
+                if ((capacity - load) > taskWeight)
+                {
+                    LinkedList<Job> newPlan = deepCopySingle(plan);
+
+                    newPlan.add(index, new Job(task, PICKUP));
+
+                    HashSet<LinkedList<Job>> set = insertDelivery(newPlan, task, taskWeight, capacity);
+
+                    // TODO make a new complete plan for each list in the set and add to the total set.
+
+                }
+            }
+            i++;
+        }
+    }
+
+    private HashSet<LinkedList<Job>> insertDelivery(LinkedList<Job> Plan, int task, double taskWeight, double capacity)
+    {
+        boolean isAfterPickup = false;
+        double load = 0;
+        int index = 0;
+
+        HashSet<LinkedList<Job>> set = new HashSet<>();
+        for (Job j : Plan)
+        {
+
+
+            // current payload
+            int weight = tasks[j.getT()].weight;
+
+            if (j.getA() == PICKUP)
+            {
+                load += weight; // Pickup
+            } else
+            {
+                load -= weight; // Delivery
+            }
+
+            if (isAfterPickup && j.getA() == PICKUP)
+            {
+                // make new plan,
+                LinkedList<Job> newPlan = deepCopySingle(Plan);
+                newPlan.add(index, new Job(task, DELIVERY));
+                set.add(newPlan);
+
+                if (load > capacity)
+                {
+                    return set;
+                }
+            }
+
+            if (j.getT() == task)
+            {
+                isAfterPickup = true;
+            }
+            index++;
+        }
+        return null;
+    }
+
 
     private ArrayList<LinkedList<Job>> deepCopy (ArrayList<LinkedList<Job>> initialList ){
         ArrayList<LinkedList<Job>> newList = new ArrayList<>();
