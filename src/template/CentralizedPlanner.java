@@ -1,13 +1,11 @@
 package template;
 
-import logist.plan.Action;
 import logist.plan.Plan;
 import logist.simulation.Vehicle;
 import logist.task.Task;
 import logist.task.TaskSet;
 import logist.topology.Topology.City;
 
-import java.lang.reflect.Array;
 import java.util.*;
 
 /**
@@ -17,6 +15,7 @@ public class CentralizedPlanner
 {
     public static final int PICKUP = 0;
     public static final int DELIVERY = 1;
+    public static final double PROBABILITY = 0.4;
 
     private static Task[] tasks;
     private static List<Vehicle> vehicles;
@@ -68,7 +67,7 @@ public class CentralizedPlanner
     {
         Task t;
         double distance = 0;
-        City homeCity = vehicle.homeCity();
+        City homeCity = vehicle.getCurrentCity();
         for (Job j : jobs)
         {
             t = tasks[j.getT()];
@@ -126,7 +125,6 @@ public class CentralizedPlanner
                 jobList.add(new LinkedList<>());
             }
         }
-        System.out.println("Job list size:" + jobList.size());
     }
 
     public void chooseNeighbours()
@@ -134,7 +132,7 @@ public class CentralizedPlanner
         //Get a random vehicle
         int referenceVehicleId;
         do {
-            Random random = new Random();
+            Random random = new Random(System.currentTimeMillis());
             referenceVehicleId = random.nextInt(vehicles.size()-1);
         }while(jobList.get(referenceVehicleId).isEmpty());
 
@@ -233,11 +231,36 @@ public class CentralizedPlanner
         return finalList;
     }
 
-
-    // TODO
     public void localChoice()
     {
+        ArrayList<ArrayList<LinkedList<Job>>> bestSolutions = new ArrayList<>();
+        int minCost = Integer.MAX_VALUE;
+        for (ArrayList<LinkedList<Job>> list : neighbours){
+            int tempCost = 0;
+            int vehicleID =0;
+            for (LinkedList<Job> vehicleJob : list){
+                tempCost += computeCost(vehicleJob, vehicles.get(vehicleID));
+                vehicleID++;
+            }
+            if (tempCost <= minCost){
+                if (tempCost != minCost){
+                    bestSolutions.clear();
+                }
+                bestSolutions.add(list);
+            }
+        }
+        if (bestSolutions.isEmpty()) {
+            System.out.println("Didn't Find any neighbor solution!");
+            return;
+        }
+        Random random = new Random(System.currentTimeMillis());
+        int chosenSolution = random.nextInt(bestSolutions.size());
+        ArrayList<LinkedList<Job>> bestSolution = bestSolutions.get(chosenSolution);
 
+        double probability = random.nextDouble();
+        if (probability < PROBABILITY){
+            jobList = bestSolution;
+        }
     }
 
     private class Job implements Cloneable
