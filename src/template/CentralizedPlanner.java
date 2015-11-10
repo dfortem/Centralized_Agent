@@ -196,7 +196,10 @@ public class CentralizedPlanner
             newPlan.add(referenceVehicleId, j);
             neighbours.add(newPlan);
         }
-        System.out.println("size: " + job.size());
+//        for (ArrayList<LinkedList<Job>> list : neighbours){
+//            System.out.println(list.get(0));
+//            System.out.println("COST: "+computeCost(list.get(0),vehicles.get(0)));
+//        }
 
     }
 
@@ -295,6 +298,7 @@ public class CentralizedPlanner
                 load -= weight; // Delivery
             }
             i++;
+            return;
         }
     }
 
@@ -416,10 +420,10 @@ public class CentralizedPlanner
     public void localChoice()
     {
         ArrayList<ArrayList<LinkedList<Job>>> bestSolutions = new ArrayList<>();
-        int minCost = Integer.MAX_VALUE;
+        double minCost = Double.MAX_VALUE;
         for (ArrayList<LinkedList<Job>> list : neighbours)
         {
-            int tempCost = 0;
+            double tempCost = 0;
             int vehicleID = 0;
             for (LinkedList<Job> vehicleJob : list)
             {
@@ -433,6 +437,7 @@ public class CentralizedPlanner
                     bestSolutions.clear();
                 }
                 bestSolutions.add(list);
+                minCost=tempCost;
             }
         }
         if (bestSolutions.isEmpty())
@@ -443,12 +448,25 @@ public class CentralizedPlanner
         Random random = new Random(System.currentTimeMillis());
         int chosenSolution = random.nextInt(bestSolutions.size());
         ArrayList<LinkedList<Job>> bestSolution = bestSolutions.get(chosenSolution);
-
+//        for (LinkedList<Job> list : bestSolution){
+//            System.out.println(list);
+//        }
+//        int cost = 0;
+//        int vehicleID = 0;
+//        for (LinkedList<Job> vehicleJob : bestSolution)
+//        {
+//            cost += computeCost(vehicleJob, vehicles.get(vehicleID));
+//            vehicleID++;
+//        }
+//        System.out.println("BEST COST: "+ minCost +"  Actual Cost: " + cost);
         double probability = random.nextDouble();
         if (probability < PROBABILITY)
         {
             jobList = bestSolution;
         }
+//        for (LinkedList<Job> list : jobList){
+//            System.out.println(list);
+//        }
     }
 
     @Override
