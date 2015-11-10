@@ -179,14 +179,24 @@ public class CentralizedPlanner
                 }
             }
         }
-        /*Changing task order operator:
-        int length = jobList.get(referenceVehicleId).size();
-        if (length > 2){
-            //TODO For all couple of tasks, interchange them using changeTaskOrder
-            ArrayList<LinkedList<Job>> newPlan = null;
-            neighbours.add(newPlan);
-        }*/
 
+        LinkedList<Job> job = jobList.get(referenceVehicleId);
+
+        if (job.size() < 2)
+        {
+            return;
+        }
+
+        HashSet<LinkedList<Job>> set = changingTaskOrder(job, vehicles.get(referenceVehicleId).capacity());
+
+        for (LinkedList<Job> j : set)
+        {
+            ArrayList<LinkedList<Job>> newPlan = deepCopy(jobList);
+            newPlan.remove(referenceVehicleId);
+            newPlan.add(referenceVehicleId, j);
+            neighbours.add(newPlan);
+        }
+        System.out.println("size: " + job.size());
 
     }
 
@@ -267,7 +277,7 @@ public class CentralizedPlanner
 
         for (Job j : plan)
         {
-            if (((capacity - load) >= taskWeight) && (i != index))
+            if (((capacity - load) > taskWeight) && (i != index))
             {
                 LinkedList<Job> newPlan = deepCopySingle(plan);
                 newPlan.add(i, new Job(task, PICKUP));
