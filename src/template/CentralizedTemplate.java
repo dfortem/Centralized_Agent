@@ -63,7 +63,10 @@ public class CentralizedTemplate implements CentralizedBehavior {
             plans.chooseNeighbours();
             plans.localChoice();
             counter++;
+
         }while(counter < TOTAL_ITERATIONS);
+
+        System.out.println(plans);
 
         long time_end = System.currentTimeMillis();
         long duration = time_end - time_start;
