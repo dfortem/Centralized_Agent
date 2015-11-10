@@ -180,6 +180,19 @@ public class CentralizedPlanner
                 {
                     ArrayList<LinkedList<Job>> tempJob;
                     tempJob = changingVehicle(referenceVehicleId, vehicle.id(), amount);
+
+                    if (tempJob.get(vehicle.id()).size() > 2)
+                    {
+                        HashSet<LinkedList<Job>> set = changingTaskOrder(tempJob.get(vehicle.id()), vehicles.get(vehicle
+                                .id()).capacity());
+                        for (LinkedList<Job> j : set)
+                        {
+                            ArrayList<LinkedList<Job>> newPlan = deepCopy(jobList);
+                            newPlan.remove(referenceVehicleId);
+                            newPlan.add(referenceVehicleId, j);
+                            neighbours.add(newPlan);
+                        }
+                    }
                 }
             }
         }
@@ -193,27 +206,27 @@ public class CentralizedPlanner
 //                System.out.println(job);
 //                cost += computeCost(job, vehicles.get(vehicleID));
 //                vehicleID++;
-//            }
+        //            }fdfd
 //            System.out.println("Cost: " + cost);
 //
 //        }
         //Changing order
-        LinkedList<Job> job = jobList.get(referenceVehicleId);
-
-        if (job.size() < 2)
-        {
-            return;
-        }
-
-        HashSet<LinkedList<Job>> set = changingTaskOrder(job, vehicles.get(referenceVehicleId).capacity());
-
-        for (LinkedList<Job> j : set)
-        {
-            ArrayList<LinkedList<Job>> newPlan = deepCopy(jobList);
-            newPlan.remove(referenceVehicleId);
-            newPlan.add(referenceVehicleId, j);
-            neighbours.add(newPlan);
-        }
+        //        LinkedList<Job> job = jobList.get(referenceVehicleId);
+        //
+        //        if (job.size() < 2)
+        //        {
+        //            return;
+        //        }
+        //
+        //        HashSet<LinkedList<Job>> set = changingTaskOrder(job, vehicles.get(referenceVehicleId).capacity());
+        //
+        //        for (LinkedList<Job> j : set)
+        //        {
+        //            ArrayList<LinkedList<Job>> newPlan = deepCopy(jobList);
+        //            newPlan.remove(referenceVehicleId);
+        //            newPlan.add(referenceVehicleId, j);
+        //            neighbours.add(newPlan);
+        //        }
 
 //        for (ArrayList<LinkedList<Job>> list : neighbours){
 //            System.out.println(list.get(0));
