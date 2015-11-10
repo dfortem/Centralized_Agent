@@ -181,6 +181,8 @@ public class CentralizedPlanner
             ArrayList<LinkedList<Job>> newPlan = null;
             neighbours.add(newPlan);
         }*/
+
+
     }
 
     private void changingVehicle(int referenceIndex, int index)
@@ -200,11 +202,29 @@ public class CentralizedPlanner
     // TODO
     private LinkedList<Job> deepCopySingle(LinkedList<Job> jobs)
     {
-        return null;
+        LinkedList<Job> temp = new LinkedList<>();
+        for (Job job : jobs)
+        {
+            try
+            {
+                temp.add(job.clone());
+            } catch (CloneNotSupportedException e)
+            {
+                System.out.println(e);
+            }
+        }
+        return temp;
     }
 
-    // TODO
-    private void changingTaskOrder(LinkedList<Job> jobs, double capacity)
+    /**
+     * Changing task order for one vehicle.
+     *
+     * @param jobs     Plan of the selected vehicle
+     * @param capacity capacity of the selected vehicle
+     *
+     * @return The set which contains all permutation of the jobList
+     */
+    private HashSet<LinkedList<Job>> changingTaskOrder(LinkedList<Job> jobs, double capacity)
     {
         HashSet<LinkedList<Job>> set = new HashSet<>();
         LinkedList<Job> newPlan;
@@ -222,9 +242,18 @@ public class CentralizedPlanner
             }
             index++;
         }
-
+        return set;
     }
 
+    /**
+     * Insert the task back to the plan at different positions.
+     *
+     * @param set      Set of permutation of the plan
+     * @param plan     The plan without the task to be inserted
+     * @param task     the task to be inserted into the plan at different positions
+     * @param index    original index of the task. (used to avoid duplication)
+     * @param capacity capacity of the vehicle
+     */
     private void insertJob(HashSet<LinkedList<Job>> set, LinkedList<Job> plan, int task, int index, double capacity)
     {
         int i = 0;
@@ -233,14 +262,12 @@ public class CentralizedPlanner
 
         for (Job j : plan)
         {
-
             if (((capacity - load) >= taskWeight) && (i != index))
             {
                 LinkedList<Job> newPlan = deepCopySingle(plan);
                 newPlan.add(i, new Job(task, PICKUP));
 
-                insertDelivery(set, newPlan, task, taskWeight, capacity);
-                // TODO make a new complete plan for each list in the set and add to the total set.
+                insertDelivery(set, newPlan, task, capacity);
             }
 
             int weight = tasks[j.getT()].weight;
@@ -256,16 +283,21 @@ public class CentralizedPlanner
         }
     }
 
-    private void insertDelivery(HashSet<LinkedList<Job>> set, LinkedList<Job> Plan, int task,
-                                double taskWeight,
-                                double
-                                        capacity)
+    /**
+     * Insert the task back to the plan at different positions.
+     *
+     * @param set      Set of permutation of the plan
+     * @param plan     The plan without the deliveryTask
+     * @param task     the DeliveryTask to be inserted into the plan at different positions
+     * @param capacity capacity of the vehicle
+     */
+    private void insertDelivery(HashSet<LinkedList<Job>> set, LinkedList<Job> plan, int task, double capacity)
     {
         boolean isAfterPickup = false;
         double load = 0;
         int index = 0;
 
-        for (Job j : Plan)
+        for (Job j : plan)
         {
             if (j.getT() == task)
             {
@@ -290,12 +322,10 @@ public class CentralizedPlanner
 
             if (isAfterPickup)
             {
-                // make new plan,
-                LinkedList<Job> newPlan = deepCopySingle(Plan);
+                LinkedList<Job> newPlan = deepCopySingle(plan);
                 newPlan.add(index + 1, new Job(task, DELIVERY));
                 set.add(newPlan);
             }
-
             index++;
         }
     }
