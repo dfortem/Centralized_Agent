@@ -1,6 +1,8 @@
 package template;
 
 //the list of imports
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import logist.LogistSettings;
@@ -63,6 +65,8 @@ public class CentralizedTemplate implements CentralizedBehavior {
             plans.chooseNeighbours();
             plans.localChoice();
             counter++;
+            System.out.println("plan "+counter);
+            //System.out.println(plans.toString());
         }while(counter < TOTAL_ITERATIONS);
 
         long time_end = System.currentTimeMillis();

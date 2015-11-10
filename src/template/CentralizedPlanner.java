@@ -27,6 +27,12 @@ public class CentralizedPlanner
 
     private Set<ArrayList<LinkedList<Job>>> neighbours;
 
+    /**
+     * Creator Function
+     *
+     * @param vehicles list of vehicles to save. (static value)
+     * @param tasks    list of tasks to be saved in an array. (static value)
+     */
     public CentralizedPlanner(List<Vehicle> vehicles, TaskSet tasks)
     {
         this.jobList = new ArrayList<>(vehicles.size());
@@ -150,21 +156,20 @@ public class CentralizedPlanner
     public void chooseNeighbours()
     {
         //Empty neighbour list
-        neighbours = new HashSet<>();
+        neighbours.clear();
         //Get a random vehicle
         int referenceVehicleId;
+        Random random = new Random(System.currentTimeMillis());
         do
         {
-            Random random = new Random(System.currentTimeMillis());
-            referenceVehicleId = random.nextInt(vehicles.size() - 1);
+            referenceVehicleId = random.nextInt(vehicles.size());
         } while (jobList.get(referenceVehicleId).isEmpty());
 
-        Vehicle referenceVehicle = vehicles.get(referenceVehicleId);
         List<Job> referencePlan = jobList.get(referenceVehicleId);
         //Changing vehicle operator
         for (Vehicle vehicle : vehicles)
         {
-            if (vehicle != referenceVehicle)
+            if (vehicle.id() != referenceVehicleId)
             {
                 int newIndex = referencePlan.get(0).getT();
                 Task task = tasks[newIndex];
@@ -194,8 +199,8 @@ public class CentralizedPlanner
         removeJob(newPlan, referenceIndex, task.id);
 
         LinkedList<Job> vehiclePlan = newPlan.get(index);
-        vehiclePlan.add(new Job(task.id, PICKUP));
-        vehiclePlan.add(new Job(task.id, DELIVERY));
+        vehiclePlan.addFirst(new Job(task.id, DELIVERY));
+        vehiclePlan.addFirst(new Job(task.id, PICKUP));
         neighbours.add(newPlan);
     }
 
@@ -434,6 +439,15 @@ public class CentralizedPlanner
         {
             jobList = bestSolution;
         }
+    }
+
+    @Override
+    public String toString(){
+        String string = new String();
+        for (LinkedList<Job> list: jobList){
+            string += list.toString() + "\n";
+        }
+        return string;
     }
 
     private class Job implements Cloneable
