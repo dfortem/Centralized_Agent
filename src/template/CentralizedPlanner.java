@@ -15,7 +15,7 @@ public class CentralizedPlanner
 {
     public static final int PICKUP = 0;
     public static final int DELIVERY = 1;
-    public static final double PROBABILITY = 1;
+    public static final double PROBABILITY = 0.4;
 
     private static Task[] tasks;
     private static List<Vehicle> vehicles;
@@ -192,10 +192,23 @@ public class CentralizedPlanner
                         tempJob.add(referenceVehicleId, listReference);
                     }
                     neighbours.add(tempJob);
-                    if (tempJob.get(vehicle.id()).size() <= 2 && tempJob.get(referenceVehicleId).size() <= 2)
-                    {
-                        neighbours.add(tempJob);
+                }
+            }
+            if (vehicles.size() == 1){
+                int newIndex = referencePlan.get(0).getT();
+                Task task = tasks[newIndex];
+                if (task.weight < vehicle.capacity())
+                {
+                    ArrayList<LinkedList<Job>> tempJob;
+                    tempJob = changingVehicle(referenceVehicleId, vehicle.id());
+
+                    if (tempJob.get(referenceVehicleId).size() > 2) {
+                        LinkedList<Job> listReference = changingTaskOrder(tempJob.get(referenceVehicleId),
+                                referenceVehicleId, vehicles.get(referenceVehicleId).capacity());
+                        tempJob.remove(referenceVehicleId);
+                        tempJob.add(referenceVehicleId, listReference);
                     }
+                    neighbours.add(tempJob);
                 }
             }
         }
@@ -295,8 +308,8 @@ public class CentralizedPlanner
 
                 insertJob(set, newPlan, task, index, capacity);
             }
-            break;
             index++;
+            break;
         }
 
         LinkedList<Job> temp = null;
@@ -500,14 +513,15 @@ public class CentralizedPlanner
 //        for (LinkedList<Job> list : bestSolution){
 //            System.out.println(list);
 //        }
-//        int cost = 0;
-//        int vehicleID = 0;
-//        for (LinkedList<Job> vehicleJob : bestSolution)
-//        {
-//            cost += computeCost(vehicleJob, vehicles.get(vehicleID));
-//            vehicleID++;
-//        }
-//        System.out.println("BEST COST: "+ minCost +"  Actual Cost: " + cost);
+        System.out.println("Neighbours: " + neighbours.size() + " Best Solutions: " + bestSolutions.size());
+        double cost = 0;
+        int vehicleID = 0;
+        for (LinkedList<Job> vehicleJob : bestSolution)
+        {
+            cost += computeCost(vehicleJob, vehicles.get(vehicleID));
+            vehicleID++;
+        }
+        System.out.println("BEST COST: "+ minCost +"  Actual Cost: " + cost);
         double probability = random.nextDouble();
         if (probability < PROBABILITY)
         {
