@@ -1,20 +1,18 @@
 package template;
 
 //the list of imports
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
 
 import logist.LogistSettings;
-
-import logist.behavior.CentralizedBehavior;
 import logist.agent.Agent;
+import logist.behavior.CentralizedBehavior;
 import logist.config.Parsers;
 import logist.plan.Plan;
 import logist.simulation.Vehicle;
 import logist.task.TaskDistribution;
 import logist.task.TaskSet;
 import logist.topology.Topology;
+
+import java.util.List;
 
 /**
  * A very simple auction agent that assigns all tasks to its first vehicle and
@@ -24,7 +22,7 @@ import logist.topology.Topology;
 @SuppressWarnings("unused")
 public class CentralizedTemplate implements CentralizedBehavior {
 
-    private final int TOTAL_ITERATIONS = 10000;
+    private final int TOTAL_ITERATIONS = 1000;
 
     private Topology topology;
     private TaskDistribution distribution;
