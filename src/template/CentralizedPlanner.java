@@ -15,7 +15,7 @@ public class CentralizedPlanner
 {
     public static final int PICKUP = 0;
     public static final int DELIVERY = 1;
-    public static final double PROBABILITY = 0.4;
+    public static final double PROBABILITY = 1;
 
     private static Task[] tasks;
     private static List<Vehicle> vehicles;
@@ -164,11 +164,8 @@ public class CentralizedPlanner
         {
             referenceVehicleId = random.nextInt(vehicles.size());
         } while (jobList.get(referenceVehicleId).isEmpty());
-        int amount;
-        do{
-            amount = random.nextInt(jobList.get(referenceVehicleId).size()/2+1);
-        } while (amount == 0);
         List<Job> referencePlan = jobList.get(referenceVehicleId);
+
         //Changing vehicle operator
         for (Vehicle vehicle : vehicles)
         {
@@ -179,18 +176,29 @@ public class CentralizedPlanner
                 if (task.weight < vehicle.capacity())
                 {
                     ArrayList<LinkedList<Job>> tempJob;
-                    tempJob = changingVehicle(referenceVehicleId, vehicle.id(), amount);
+                    tempJob = changingVehicle(referenceVehicleId, vehicle.id());
 
                     if (tempJob.get(vehicle.id()).size() > 2)
                     {
-                        HashSet<LinkedList<Job>> set = changingTaskOrder(tempJob.get(vehicle.id()), vehicles.get(vehicle
-                                .id()).capacity());
+                        HashSet<LinkedList<Job>> set = changingTaskOrder(tempJob.get(vehicle.id()),
+                                vehicles.get(vehicle.id()).capacity());
                         for (LinkedList<Job> j : set)
                         {
                             tempJob.remove(vehicle.id());
                             tempJob.add(vehicle.id(), j);
                             neighbours.add(tempJob);
                         }
+//                    } else if (tempJob.get(referenceVehicleId).size() > 2){
+//                        HashSet<LinkedList<Job>> set = changingTaskOrder(tempJob.get(referenceVehicleId),
+//                                vehicles.get(referenceVehicleId).capacity());
+//                        for (LinkedList<Job> j : set)
+//                        {
+//                            tempJob.remove(referenceVehicleId);
+//                            tempJob.add(referenceVehicleId, j);
+//                            neighbours.add(tempJob);
+//                        }
+                    } else {
+                        neighbours.add(tempJob);
                     }
                 }
             }
@@ -234,19 +242,19 @@ public class CentralizedPlanner
 
     }
 
-    private ArrayList<LinkedList<Job>> changingVehicle(int referenceIndex, int index, int amount)
+    private ArrayList<LinkedList<Job>> changingVehicle(int referenceIndex, int index)
     {
         ArrayList<LinkedList<Job>> newPlan = deepCopy(jobList);
 
         List<Job> referencePlan = newPlan.get(referenceIndex);
-        for (int i=0; i<amount; i++) {
-            Task task = tasks[referencePlan.get(0).getT()];
-            removeJob(newPlan, referenceIndex, task.id);
 
-            LinkedList<Job> vehiclePlan = newPlan.get(index);
-            vehiclePlan.addFirst(new Job(task.id, DELIVERY));
-            vehiclePlan.addFirst(new Job(task.id, PICKUP));
-        }
+        Task task = tasks[referencePlan.get(0).getT()];
+        removeJob(newPlan, referenceIndex, task.id);
+
+        LinkedList<Job> vehiclePlan = newPlan.get(index);
+        vehiclePlan.addFirst(new Job(task.id, DELIVERY));
+        vehiclePlan.addFirst(new Job(task.id, PICKUP));
+
         return newPlan;
     }
 
