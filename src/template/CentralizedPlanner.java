@@ -187,10 +187,9 @@ public class CentralizedPlanner
                                 .id()).capacity());
                         for (LinkedList<Job> j : set)
                         {
-                            ArrayList<LinkedList<Job>> newPlan = deepCopy(jobList);
-                            newPlan.remove(referenceVehicleId);
-                            newPlan.add(referenceVehicleId, j);
-                            neighbours.add(newPlan);
+                            tempJob.remove(vehicle.id());
+                            tempJob.add(vehicle.id(), j);
+                            neighbours.add(tempJob);
                         }
                     }
                 }
