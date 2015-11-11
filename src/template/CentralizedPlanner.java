@@ -178,16 +178,18 @@ public class CentralizedPlanner
                     ArrayList<LinkedList<Job>> tempJob;
                     tempJob = changingVehicle(referenceVehicleId, vehicle.id());
 
-                    if (tempJob.get(vehicle.id()).size() > 2)
-                    {
-                        HashSet<LinkedList<Job>> set = changingTaskOrder(tempJob.get(vehicle.id()),
-                                vehicles.get(vehicle.id()).capacity());
-                        for (LinkedList<Job> j : set)
-                        {
-                            tempJob.remove(vehicle.id());
-                            tempJob.add(vehicle.id(), j);
-                            neighbours.add(tempJob);
-                        }
+                    //                    if (tempJob.get(vehicle.id()).size() > 2)
+                    //                    {
+                    //                        LinkedList<Job> set = changingTaskOrder(tempJob.get(vehicle.id()),
+                    // vehicle.id(),
+                    //                                vehicles.get(vehicle.id()).capacity());
+                    //                        for (LinkedList<Job> j : set)
+                    //                        {
+                    //                            tempJob.remove(vehicle.id());
+                    //                            tempJob.add(vehicle.id(), j);
+                    //                            neighbours.add(tempJob);
+                    //                        }
+
 //                    } else if (tempJob.get(referenceVehicleId).size() > 2){
 //                        HashSet<LinkedList<Job>> set = changingTaskOrder(tempJob.get(referenceVehicleId),
 //                                vehicles.get(referenceVehicleId).capacity());
@@ -197,9 +199,9 @@ public class CentralizedPlanner
 //                            tempJob.add(referenceVehicleId, j);
 //                            neighbours.add(tempJob);
 //                        }
-                    } else {
-                        neighbours.add(tempJob);
-                    }
+                    //                    } else {
+                    //                        neighbours.add(tempJob);
+                    //                    }
                 }
             }
         }
@@ -283,7 +285,7 @@ public class CentralizedPlanner
      *
      * @return The set which contains all permutation of the jobList
      */
-    private HashSet<LinkedList<Job>> changingTaskOrder(LinkedList<Job> jobs, double capacity)
+    private LinkedList<Job> changingTaskOrder(LinkedList<Job> jobs, int vehicleID, double capacity)
     {
         HashSet<LinkedList<Job>> set = new HashSet<>();
         LinkedList<Job> newPlan;
@@ -300,9 +302,21 @@ public class CentralizedPlanner
                 insertJob(set, newPlan, task, index, capacity);
             }
             index++;
-            return set;
+            break;
         }
-        return set;
+
+        LinkedList<Job> temp = null;
+        double minimumCost = Double.MAX_VALUE;
+        for (LinkedList<Job> jb : set)
+        {
+            double tempCost;
+            if ((tempCost = computeCost(jb, vehicles.get(vehicleID))) < minimumCost)
+            {
+                temp = jb;
+                minimumCost = tempCost;
+            }
+        }
+        return temp;
     }
 
     /**
