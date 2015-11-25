@@ -22,7 +22,7 @@ import java.util.List;
 @SuppressWarnings("unused")
 public class CentralizedTemplate implements CentralizedBehavior {
 
-    private final int TOTAL_ITERATIONS = 1000;
+    private final int TOTAL_ITERATIONS = 10000;
 
     private Topology topology;
     private TaskDistribution distribution;

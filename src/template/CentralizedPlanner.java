@@ -141,8 +141,8 @@ public class CentralizedPlanner
         {
             if (tasks[i].weight < capacity)
             {
-                jobs.add(new Job(i, PICKUP));
-                jobs.add(new Job(i, DELIVERY));
+                jobs.addFirst(new Job(i, DELIVERY));
+                jobs.addFirst(new Job(i, PICKUP));
             } else
             {
                 throw new IllegalArgumentException("Task do not fit any vehicle");
@@ -166,7 +166,7 @@ public class CentralizedPlanner
         neighbours.clear();
         //Get a random vehicle
         int referenceVehicleId;
-        Random random = new Random(System.currentTimeMillis());
+        Random random = new Random();
         do
         {
             referenceVehicleId = random.nextInt(vehicles.size());
@@ -184,23 +184,23 @@ public class CentralizedPlanner
                 {
                     ArrayList<LinkedList<Job>> tempJob;
                     tempJob = changingVehicle(referenceVehicleId, vehicle.id());
-
-                    if (tempJob.get(vehicle.id()).size() > 2)
-                    {
-                        LinkedList<Job> list = changingTaskOrder(tempJob.get(vehicle.id()), vehicle.id(),
-                                vehicles.get(vehicle.id()).capacity());
-                        tempJob.remove(vehicle.id());
-                        tempJob.add(vehicle.id(), list);
-                    }
-                    if (tempJob.get(referenceVehicleId).size() > 2) {
-                        LinkedList<Job> listReference = changingTaskOrder(tempJob.get(referenceVehicleId),
-                                referenceVehicleId, vehicles.get(referenceVehicleId).capacity());
-                        tempJob.remove(referenceVehicleId);
-                        tempJob.add(referenceVehicleId, listReference);
-                    }
-                    neighbours.add(tempJob);
                     if (tempJob.get(vehicle.id()).size() <= 2 && tempJob.get(referenceVehicleId).size() <= 2)
                     {
+                        neighbours.add(tempJob);
+                    }
+                    else {
+                        if (tempJob.get(vehicle.id()).size() > 2) {
+                            LinkedList<Job> list = changingTaskOrder(tempJob.get(vehicle.id()), vehicle.id(),
+                                    vehicles.get(vehicle.id()).capacity());
+                            tempJob.remove(vehicle.id());
+                            tempJob.add(vehicle.id(), list);
+                        }
+                        if (tempJob.get(referenceVehicleId).size() > 2) {
+                            LinkedList<Job> listReference = changingTaskOrder(tempJob.get(referenceVehicleId),
+                                    referenceVehicleId, vehicles.get(referenceVehicleId).capacity());
+                            tempJob.remove(referenceVehicleId);
+                            tempJob.add(referenceVehicleId, listReference);
+                        }
                         neighbours.add(tempJob);
                     }
                 }
@@ -224,7 +224,6 @@ public class CentralizedPlanner
         return newPlan;
     }
 
-    // TODO
     private LinkedList<Job> deepCopySingle(LinkedList<Job> jobs)
     {
         LinkedList<Job> temp = new LinkedList<>();
@@ -255,19 +254,15 @@ public class CentralizedPlanner
         LinkedList<Job> newPlan;
         int index = 0;
 
-        for (Job j : jobs)
+        if (jobs.get(0).getA() == PICKUP)
         {
-            if (j.getA() == PICKUP)
-            {
-                int task = j.getT();
-                newPlan = deepCopySingle(jobs);
-                removeJob(newPlan, task);
+            int task = jobs.get(0).getT();
+            newPlan = deepCopySingle(jobs);
+            removeJob(newPlan, task);
 
-                insertJob(set, newPlan, task, index, capacity);
-            }
-            index++;
-            break;
+            insertJob(set, newPlan, task, index, capacity);
         }
+        index++;
 
         LinkedList<Job> temp = null;
         double minimumCost = Double.MAX_VALUE;
@@ -280,7 +275,8 @@ public class CentralizedPlanner
                 minimumCost = tempCost;
             }
         }
-        return temp;
+        if (temp == null) {return jobs;}
+        else {return temp;}
     }
 
     /**
@@ -441,12 +437,17 @@ public class CentralizedPlanner
     {
         ArrayList<ArrayList<LinkedList<Job>>> bestSolutions = new ArrayList<>();
         double minCost = Double.MAX_VALUE;
+//        System.out.println("Neighbours: " + neighbours.size());
         for (ArrayList<LinkedList<Job>> list : neighbours)
         {
             double tempCost = 0;
             int vehicleID = 0;
+//            System.out.println("List: " + list.size());
             for (LinkedList<Job> vehicleJob : list)
             {
+//                System.out.print("Vehicle Job " + vehicleID);
+//                System.out.print(" " + vehicleJob);
+//                System.out.print(": " + vehicleJob.size()+"\n");
                 tempCost += computeCost(vehicleJob, vehicles.get(vehicleID));
                 vehicleID++;
             }
@@ -465,7 +466,7 @@ public class CentralizedPlanner
             System.out.println("Didn't Find any neighbor solution!");
             return;
         }
-        Random random = new Random(System.currentTimeMillis());
+        Random random = new Random();
         int chosenSolution = random.nextInt(bestSolutions.size());
         ArrayList<LinkedList<Job>> bestSolution = bestSolutions.get(chosenSolution);
 
