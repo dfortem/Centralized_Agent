@@ -174,37 +174,42 @@ public class CentralizedPlanner
         List<Job> referencePlan = jobList.get(referenceVehicleId);
 
         //Changing vehicle operator
-        for (Vehicle vehicle : vehicles)
-        {
-            if (vehicle.id() != referenceVehicleId)
-            {
-                int newIndex = referencePlan.get(0).getT();
-                Task task = tasks[newIndex];
-                if (task.weight < vehicle.capacity())
-                {
-                    ArrayList<LinkedList<Job>> tempJob;
-                    tempJob = changingVehicle(referenceVehicleId, vehicle.id());
-                    if (tempJob.get(vehicle.id()).size() <= 2 && tempJob.get(referenceVehicleId).size() <= 2)
-                    {
-                        neighbours.add(tempJob);
-                    }
-                    else {
-                        if (tempJob.get(vehicle.id()).size() > 2) {
-                            LinkedList<Job> list = changingTaskOrder(tempJob.get(vehicle.id()), vehicle.id(),
-                                    vehicles.get(vehicle.id()).capacity());
-                            tempJob.remove(vehicle.id());
-                            tempJob.add(vehicle.id(), list);
+        if (vehicles.size() > 1) {
+            for (Vehicle vehicle : vehicles) {
+                if (vehicle.id() != referenceVehicleId) {
+                    int newIndex = referencePlan.get(0).getT();
+                    Task task = tasks[newIndex];
+                    if (task.weight < vehicle.capacity()) {
+                        ArrayList<LinkedList<Job>> tempJob;
+                        tempJob = changingVehicle(referenceVehicleId, vehicle.id());
+                        if (tempJob.get(vehicle.id()).size() <= 2 && tempJob.get(referenceVehicleId).size() <= 2) {
+                            neighbours.add(tempJob);
+                        } else {
+                            if (tempJob.get(vehicle.id()).size() > 2) {
+                                LinkedList<Job> list = changingTaskOrder(tempJob.get(vehicle.id()), vehicle.id(),
+                                        vehicles.get(vehicle.id()).capacity());
+                                tempJob.remove(vehicle.id());
+                                tempJob.add(vehicle.id(), list);
+                            }
+                            if (tempJob.get(referenceVehicleId).size() > 2) {
+                                LinkedList<Job> listReference = changingTaskOrder(tempJob.get(referenceVehicleId),
+                                        referenceVehicleId, vehicles.get(referenceVehicleId).capacity());
+                                tempJob.remove(referenceVehicleId);
+                                tempJob.add(referenceVehicleId, listReference);
+                            }
+                            neighbours.add(tempJob);
                         }
-                        if (tempJob.get(referenceVehicleId).size() > 2) {
-                            LinkedList<Job> listReference = changingTaskOrder(tempJob.get(referenceVehicleId),
-                                    referenceVehicleId, vehicles.get(referenceVehicleId).capacity());
-                            tempJob.remove(referenceVehicleId);
-                            tempJob.add(referenceVehicleId, listReference);
-                        }
-                        neighbours.add(tempJob);
                     }
                 }
             }
+        } else {
+            ArrayList<LinkedList<Job>> tempJob = deepCopy(jobList);
+            if (tempJob.get(0).size() > 2) {
+                LinkedList<Job> list = changingTaskOrder(tempJob.get(0), 0, vehicles.get(0).capacity());
+                tempJob.remove(0);
+                tempJob.add(0, list);
+            }
+            neighbours.add(tempJob);
         }
     }
 
